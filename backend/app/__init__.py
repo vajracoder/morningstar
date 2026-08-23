@@ -1,0 +1,1 @@
+"""KrishiPulse App Package"""

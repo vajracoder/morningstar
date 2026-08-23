@@ -42,8 +42,6 @@ const SIDEBAR_ITEMS = [
   ]},
 ]
 
-import { DemoTourBar } from '@/components/ui'
-
 export default function AppShell() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -186,9 +184,6 @@ export default function AppShell() {
           </NavLink>
         ))}
       </nav>
-
-      {/* ---- Floating SIH Demo Tour Controller ---- */}
-      <DemoTourBar />
     </div>
   )
 }

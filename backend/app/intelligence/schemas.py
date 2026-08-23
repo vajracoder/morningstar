@@ -148,3 +148,34 @@ class BuyerMatchRequest(BaseModel):
     financial_urgency: str = "MEDIUM"
     spoilage_risk: str = "LOW"
 
+
+# ---------------------------------------------------------
+# AI Explanation & Negotiation Context Schemas
+# ---------------------------------------------------------
+
+class AIExplanationResponse(BaseModel):
+    crop_lot_id: str
+    decision: str
+    headline: str
+    farmer_summary: str
+    key_drivers: List[str]
+    risks_and_mitigations: List[str]
+    actionable_advice: str
+    is_grounded_factual: bool = True
+    generated_at: str
+
+
+class NegotiationTalkingPointsResponse(BaseModel):
+    crop_lot_id: str
+    buyer_id: str
+    buyer_name: str
+    current_market_price: float
+    offered_price: float
+    suggested_counter_offer: float
+    walkaway_price: float
+    opening_statement: str
+    leverage_points: List[str]
+    counter_arguments: List[str]
+    is_grounded_factual: bool = True
+    generated_at: str
+

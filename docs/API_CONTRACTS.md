@@ -175,8 +175,9 @@ This document serves as the team's single source of truth for REST API contracts
 [
   {
     "buyer_id": "buyer_001",
-    "name": "ABC Foods Pvt Ltd",
-    "location": "Pune",
+    "name": "Suresh Gupta",
+    "company_name": "ABC Foods Pvt Ltd",
+    "location": "Pune Industrial Area",
     "distance_km": 160.0,
     "match_score": 0.94,
     "offer_price": 2570.0,
@@ -184,9 +185,85 @@ This document serves as the team's single source of truth for REST API contracts
     "risk": "LOW",
     "reasons": [
       "Grade A accepted",
-      "Within delivery range",
+      "Within delivery range (160 km)",
       "Strong payment history (98% on-time)"
-    ]
+    ],
+    "factor_breakdown": {
+      "quality_score": 1.0,
+      "quantity_score": 1.0,
+      "price_score": 0.98,
+      "distance_score": 0.54,
+      "reliability_score": 0.98,
+      "delivery_score": 0.85,
+      "history_score": 0.98
+    }
   }
 ]
 ```
+
+### `POST /api/buyer-matches`
+- **Consumer**: Ishan (Marketplace)
+- **Body**: Custom lot parameters (`crop`, `quantity`, `quality_grade`, `location`, `current_market_price`).
+- **Response**: `200 OK` (Ranked list of matching buyers)
+
+---
+
+## 7. Grounded AI Advice & Negotiation Endpoints (Owner: Kuldeep — Phase 5)
+
+### `GET /api/crop-lots/{id}/ai-explanation`
+- **Consumer**: Tilak (Frontend)
+- **Response**: `200 OK`
+```json
+{
+  "crop_lot_id": "lot_wheat_nashik_001",
+  "decision": "WAIT",
+  "headline": "Hold your Wheat for 3 days to gain an estimated +₹5,500 net profit.",
+  "farmer_summary": "Your 100 quintal lot of Grade A Wheat in Nashik is currently valued at ₹2,480/q. Market intelligence predicts a bullish short term rally to ₹2,520/q within 3 days. Holding will generate an estimated net gain of ₹5,500 after accounting for storage (₹300) and spoilage risk (₹200).",
+  "key_drivers": [
+    "Price Momentum: Projected to rise from ₹2,480/q to ₹2,520/q (+₹40/q).",
+    "Holding Cost Efficiency: Total 3-day holding cost is ₹500, well below gross gains of ₹4,000.",
+    "Quality Preservation: Grade A grain maintains premium grade under proper on-farm storage."
+  ],
+  "risks_and_mitigations": [
+    "Risk: Unexpected APMC market arrival spikes. Mitigation: Lock in advance conditional contract if price crosses ₹2,520/q.",
+    "Risk: Storage humidity increase. Mitigation: Monitor moisture levels to preserve Grade A rating."
+  ],
+  "actionable_advice": "Do not rush to sell at the current mandi price of ₹2,480/q. Re-evaluate on day 3 or accept bids above ₹2,520/q.",
+  "is_grounded_factual": true,
+  "generated_at": "2026-08-23T13:00:00Z"
+}
+```
+
+---
+
+### `GET /api/crop-lots/{id}/negotiation-context`
+- **Consumer**: Tilak (Frontend Chat/Deal Sheet), Ishan (Marketplace Negotiation)
+- **Query Params**:
+  - `buyer_id` (optional string, e.g. "buyer_001")
+- **Response**: `200 OK`
+```json
+{
+  "crop_lot_id": "lot_wheat_nashik_001",
+  "buyer_id": "buyer_001",
+  "buyer_name": "ABC Foods Pvt Ltd",
+  "current_market_price": 2480.0,
+  "offered_price": 2570.0,
+  "suggested_counter_offer": 2600.0,
+  "walkaway_price": 2505.0,
+  "opening_statement": "Namaste. We have 100 quintals of certified Grade A Wheat ready for immediate dispatch. Given the premium quality and current mandi momentum, we are looking for ₹2,600/q.",
+  "leverage_points": [
+    "Certified Grade A crop with optimal moisture content and zero foreign matter.",
+    "Consistent lot size (100 quintals) ready for single-trip logistics.",
+    "APMC market price trajectory is trending upward towards ₹2,570/q in the 7-day forecast.",
+    "Alternative buyers in Pune/Nashik region are actively bidding at ₹2,570/q."
+  ],
+  "counter_arguments": [
+    "If buyer offers below ₹2,505/q: 'Our quality grade and local APMC modal rate (₹2,480/q) justify a minimum price of ₹2,505/q.'",
+    "If buyer requests farmer to bear transport: 'We can agree on ₹2,570/q if you arrange farmgate pickup directly.'",
+    "If buyer questions quality: 'Inspection certificate and batch moisture test report are available for verification.'"
+  ],
+  "is_grounded_factual": true,
+  "generated_at": "2026-08-23T13:00:00Z"
+}
+```
+

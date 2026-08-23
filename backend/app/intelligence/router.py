@@ -14,11 +14,14 @@ from backend.app.intelligence.schemas import (
     NetRealisationRequest,
     BuyerMatchResponse,
     BuyerMatchRequest,
+    AIExplanationResponse,
+    NegotiationTalkingPointsResponse,
 )
 from backend.app.intelligence.digital_twin import digital_twin_service
 from backend.app.intelligence.net_realisation_service import net_realisation_calculator
 from backend.app.intelligence.sell_decision_service import sell_decision_engine
 from backend.app.intelligence.buyer_matching_service import buyer_matching_service
+from backend.app.intelligence.ai_explanation_service import ai_explanation_service
 
 router = APIRouter(prefix="/api/crop-lots", tags=["Digital Twin & Decision Engine (Kuldeep)"])
 
@@ -170,6 +173,44 @@ def get_ranked_buyers_for_lot(id: str, db: Session = Depends(get_db)):
         spoilage_risk=spoilage_risk,
         storage_days=storage_days,
     )
+
+
+@router.get("/{id}/ai-explanation", response_model=AIExplanationResponse, summary="Get Grounded Farmer AI Explanation")
+def get_farmer_ai_explanation(id: str, db: Session = Depends(get_db)):
+    """
+    Generates a natural, grounded explanation of market factors, price predictions,
+    and why the recommended action (WAIT or SELL_NOW) maximizes the farmer's profit.
+    """
+    try:
+        return ai_explanation_service.generate_decision_explanation(db=db, crop_lot_id=id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.get("/{id}/negotiation-context", response_model=NegotiationTalkingPointsResponse, summary="Get Grounded Negotiation Talking Points")
+def get_negotiation_talking_points(
+    id: str,
+    buyer_id: Optional[str] = Query(default=None, description="Optional buyer identifier"),
+    db: Session = Depends(get_db)
+):
+    """
+    Generates strategic negotiation talking points, suggested counter-offers, walkaway bounds,
+    and leverage arguments for trading with a specific buyer.
+    """
+    try:
+        return ai_explanation_service.generate_negotiation_context(
+            db=db,
+            crop_lot_id=id,
+            buyer_id=buyer_id
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
 
 
 # Standalone calculation router for arbitrary buyer/marketplace scenarios

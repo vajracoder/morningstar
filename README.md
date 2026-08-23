@@ -36,7 +36,6 @@ Farmer → Crop Lot → Quality → Market Intelligence → Forecast → Sell/Wa
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons, Recharts
 - **Backend & APIs**: Node.js, Express, MongoDB (Mongoose), JWT Authentication
 - **AI & Forecast Engine**: Machine learning predictive models (price forecasting & recommendation engine)
-- **Evaluator Mode**: Built-in 12-step interactive SIH Judge Walkthrough controller (`DemoTourBar`)
 
 ---
 

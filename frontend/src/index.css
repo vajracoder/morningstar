@@ -7,7 +7,7 @@
 
 /* ----- Custom Properties / Design Tokens ----- */
 :root {
-  /* Brand Colors */
+  /* Brand Colors — Agricultural Green */
   --color-primary-50:  #f0fdf4;
   --color-primary-100: #dcfce7;
   --color-primary-200: #bbf7d0;
@@ -19,7 +19,7 @@
   --color-primary-800: #166534;
   --color-primary-900: #14532d;
 
-  /* Amber / Warning */
+  /* Amber / Warning / AI Advisory */
   --color-amber-400: #fbbf24;
   --color-amber-500: #f59e0b;
   --color-amber-600: #d97706;
@@ -29,52 +29,49 @@
   --color-red-500: #ef4444;
   --color-red-600: #dc2626;
 
-  /* Neutrals — Dark Mode Oriented */
-  --color-surface-900: #0a0e1a;
-  --color-surface-800: #0f1629;
-  --color-surface-700: #151d35;
-  --color-surface-600: #1c2640;
-  --color-surface-500: #243050;
-  --color-surface-400: #2e3d61;
-  --color-surface-300: #3d5080;
-  --color-border:      #1e2d4a;
-  --color-border-light:#2a3d5e;
+  /* 3-Tier Production Surface Hierarchy (Deep Slate) */
+  --color-surface-900: #0a0e1a; /* Base Canvas */
+  --color-surface-800: #0f172a; /* Primary Card Layer */
+  --color-surface-700: #1e293b; /* Elevated / Input Layer */
+  --color-surface-600: #334155; /* Hover / Subtle Component */
+  --color-surface-500: #475569;
+  --color-border:      #1e293b; /* Clean Structural Border */
+  --color-border-light:#334155; /* Active / Hover Border */
 
-  /* Text */
-  --color-text-primary:   #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted:     #64748b;
-  --color-text-inverse:   #0f1629;
+  /* Text Contrast (WCAG AA Compliant >= 4.5:1) */
+  --color-text-primary:   #f8fafc; /* Pure White Slate */
+  --color-text-secondary: #cbd5e1; /* Clear 85% Slate */
+  --color-text-muted:     #94a3b8; /* Muted 60% Slate (5.4:1 contrast on #0f172a) */
+  --color-text-inverse:   #0f172a;
 
-  /* Semantic */
+  /* Semantics */
   --color-success:  #22c55e;
   --color-warning:  #f59e0b;
   --color-danger:   #ef4444;
   --color-info:     #3b82f6;
 
   /* Typography */
-  --font-sans: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
 
-  /* Spacing */
+  /* Standardized Radius Hierarchy */
+  --radius-xs:  4px;
   --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  16px;
-  --radius-xl:  24px;
-  --radius-2xl: 32px;
+  --radius-md:  10px;  /* Controls & inputs */
+  --radius-lg:  14px;  /* Cards & containers */
+  --radius-xl:  20px;  /* Modals & Hero cards */
+  --radius-pill: 999px; /* Status badges */
 
-  /* Shadows */
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
-  --shadow-lg:  0 10px 30px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3);
-  --shadow-xl:  0 20px 60px rgba(0,0,0,0.6);
-  --shadow-glow-green: 0 0 20px rgba(34,197,94,0.2);
-  --shadow-glow-amber: 0 0 20px rgba(245,158,11,0.2);
+  /* Refined Elevation Shadows (No neon glare) */
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg:  0 10px 25px rgba(0,0,0,0.45);
+  --shadow-xl:  0 20px 40px rgba(0,0,0,0.55);
+  --shadow-glow-subtle: 0 0 15px rgba(34,197,94,0.12);
 
   /* Transitions */
-  --transition-fast:   150ms cubic-bezier(0.4,0,0.2,1);
-  --transition-normal: 250ms cubic-bezier(0.4,0,0.2,1);
-  --transition-slow:   400ms cubic-bezier(0.4,0,0.2,1);
+  --transition-fast:   140ms cubic-bezier(0.4,0,0.2,1);
+  --transition-normal: 220ms cubic-bezier(0.4,0,0.2,1);
 
   /* Layout */
   --sidebar-width: 260px;
@@ -204,18 +201,34 @@ a:hover {
 @media (min-width: 768px)  { .page-content { padding: 1.5rem; } }
 @media (min-width: 1024px) { .page-content { padding: 2rem; } }
 
-/* ----- Cards ----- */
+/* ----- Cards & Surfaces ----- */
 .card {
   background: var(--color-surface-800);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-fast);
 }
 
 .card:hover {
   border-color: var(--color-border-light);
+  box-shadow: var(--shadow-md);
+}
+
+.card-interactive {
+  background: var(--color-surface-800);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.card-interactive:hover {
+  border-color: var(--color-border-light);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
@@ -227,24 +240,43 @@ a:hover {
   box-shadow: var(--shadow-md);
 }
 
-/* ----- Gradient Backgrounds ----- */
-.gradient-primary {
-  background: linear-gradient(135deg, #0f2d1a 0%, #0a0e1a 50%, #0a1a2e 100%);
+.card-hero {
+  background: linear-gradient(135deg, rgba(22,163,74,0.08) 0%, var(--color-surface-800) 70%);
+  border: 1px solid rgba(34,197,94,0.3);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
 }
 
-.gradient-card-green {
-  background: linear-gradient(135deg, rgba(22,163,74,0.15) 0%, rgba(15,22,41,0) 100%);
-  border-color: rgba(34,197,94,0.2) !important;
+/* ----- Standardized Icon Box Scales ----- */
+.icon-box-sm {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.gradient-card-amber {
-  background: linear-gradient(135deg, rgba(217,119,6,0.15) 0%, rgba(15,22,41,0) 100%);
-  border-color: rgba(245,158,11,0.2) !important;
+.icon-box-md {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.gradient-card-red {
-  background: linear-gradient(135deg, rgba(220,38,38,0.15) 0%, rgba(15,22,41,0) 100%);
-  border-color: rgba(239,68,68,0.2) !important;
+.icon-box-lg {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 /* ----- Stat Cards ----- */
@@ -258,12 +290,8 @@ a:hover {
   transition: all var(--transition-normal);
 }
 
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--color-primary-500), transparent);
+.stat-card:hover {
+  border-color: var(--color-border-light);
 }
 
 /* ----- Buttons ----- */

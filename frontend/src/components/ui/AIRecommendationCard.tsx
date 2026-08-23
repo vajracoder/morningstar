@@ -1,11 +1,15 @@
 // ============================================================
-// MORNINGSTAR — AI RECOMMENDATION CARD COMPONENT
-// The most important UI element — makes the decision crystal clear.
+// MORNINGSTAR — AI RECOMMENDATION CARD COMPONENT (FinTech Standard)
 // ============================================================
 
 import { useState } from 'react'
 import type { SaleRecommendation, Decision } from '@/types'
-import { Brain, ChevronDown, ChevronUp, Clock, TrendingUp, AlertTriangle, Zap } from 'lucide-react'
+import {
+  Brain, ChevronDown, ChevronUp, Clock, TrendingUp,
+  Zap, ArrowRight, ShieldCheck, Warehouse, Scale, Coins
+} from 'lucide-react'
+import Button from './Button'
+import Badge from './Badge'
 
 interface AIRecommendationCardProps {
   recommendation: SaleRecommendation
@@ -13,34 +17,32 @@ interface AIRecommendationCardProps {
 }
 
 const DECISION_CONFIG: Record<Decision, {
-  label: string; color: string; bg: string; border: string; icon: typeof Zap
+  label: string; color: string; bg: string; border: string; icon: any
 }> = {
   SELL_NOW: {
     label: 'SELL NOW',
     color: '#4ade80',
-    bg: 'rgba(34,197,94,0.1)',
-    border: 'rgba(34,197,94,0.3)',
+    bg: 'rgba(34, 197, 94, 0.12)',
+    border: 'rgba(34, 197, 94, 0.35)',
     icon: Zap,
   },
   WAIT: {
-    label: `WAIT`,
+    label: 'WAIT TO SELL',
     color: '#fbbf24',
-    bg: 'rgba(245,158,11,0.08)',
-    border: 'rgba(245,158,11,0.25)',
+    bg: 'rgba(245, 158, 11, 0.12)',
+    border: 'rgba(245, 158, 11, 0.35)',
     icon: Clock,
   },
   PARTIAL_SELL: {
     label: 'PARTIAL SELL',
     color: '#60a5fa',
-    bg: 'rgba(59,130,246,0.08)',
-    border: 'rgba(59,130,246,0.25)',
+    bg: 'rgba(59, 130, 246, 0.12)',
+    border: 'rgba(59, 130, 246, 0.35)',
     icon: TrendingUp,
   },
 }
 
-function formatCurrency(n: number) {
-  if (n >= 100000) return `₹${(n / 100000).toFixed(2)}L`
-  if (n >= 1000) return `₹${(n / 1000).toFixed(1)}K`
+function formatINR(n: number) {
   return `₹${n.toLocaleString('en-IN')}`
 }
 
@@ -50,213 +52,175 @@ export default function AIRecommendationCard({ recommendation, onAction }: AIRec
   const DecisionIcon = cfg.icon
 
   const gain = recommendation.net_realisation_recommended - recommendation.net_realisation_current
+  const confidencePercent = Math.round(recommendation.confidence * 100)
 
   return (
-    <div style={{
-      background: `linear-gradient(135deg, ${cfg.bg} 0%, rgba(15,22,41,0.98) 60%)`,
-      border: `1px solid ${cfg.border}`,
-      borderRadius: 'var(--radius-xl)',
-      padding: '1.5rem',
-      position: 'relative',
-      overflow: 'hidden',
-      boxShadow: `0 0 40px ${cfg.bg}, var(--shadow-lg)`,
-    }}
-      className="animate-fade-in"
+    <div
+      className="card"
+      style={{
+        background: `linear-gradient(135deg, ${cfg.bg} 0%, var(--color-surface-800) 65%)`,
+        border: `1px solid ${cfg.border}`,
+        borderRadius: 'var(--radius-xl)',
+        padding: '1.5rem',
+      }}
     >
-      {/* Background glow */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: `radial-gradient(ellipse at top left, ${cfg.bg} 0%, transparent 60%)`,
-        pointerEvents: 'none',
-      }} />
-
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem', position: 'relative' }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10,
-          background: cfg.bg, border: `1px solid ${cfg.border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <Brain size={18} color={cfg.color} />
-        </div>
-        <div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            AI Recommendation
-          </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
-            Confidence {Math.round(recommendation.confidence * 100)}%
-          </div>
-        </div>
-        {/* Confidence pill */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <div style={{
-            background: 'var(--color-surface-700)', borderRadius: 999,
-            padding: '0.25rem 0.625rem', display: 'flex', alignItems: 'center', gap: '0.375rem',
-          }}>
-            <div style={{
-              width: 8, height: 8, borderRadius: '50%',
-              background: recommendation.confidence > 0.75 ? '#4ade80' : recommendation.confidence > 0.5 ? '#fbbf24' : '#f87171',
-            }} />
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-              {Math.round(recommendation.confidence * 100)}% sure
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Decision */}
-      <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '1rem',
-          flexWrap: 'wrap',
-        }}>
-          <div>
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(2rem, 6vw, 2.75rem)',
-              fontWeight: 900,
+      {/* Header Row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div
+            className="icon-box-md"
+            style={{
+              background: cfg.bg,
+              border: `1px solid ${cfg.border}`,
               color: cfg.color,
-              letterSpacing: '-0.03em',
-              lineHeight: 1,
-              textShadow: `0 0 30px ${cfg.color}40`,
-            }}>
+            }}
+          >
+            <Brain size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: cfg.color }}>
+              Decision Intelligence Engine
+            </div>
+            <h2 style={{ fontSize: 'clamp(1.25rem, 3vw, 1.625rem)', fontWeight: 900, margin: '0.15rem 0 0', color: 'var(--color-text-primary)' }}>
               {recommendation.decision === 'WAIT'
                 ? `WAIT ${recommendation.recommended_days} DAYS`
                 : cfg.label}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginTop: '0.375rem' }}>
-              {recommendation.reason}
-            </div>
+            </h2>
           </div>
         </div>
-      </div>
 
-      {/* Key Metrics Row */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '0.75rem',
-        marginBottom: '1.25rem',
-      }}>
-        {[
-          {
-            label: 'Expected Gain',
-            value: formatCurrency(recommendation.expected_gain),
-            color: '#4ade80',
-            icon: '↑',
-          },
-          {
-            label: 'Storage Cost',
-            value: formatCurrency(recommendation.storage_cost_total),
+        {/* Confidence Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{
+            background: 'var(--color-surface-700)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-pill)',
+            padding: '0.35rem 0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            fontSize: '0.75rem',
+            fontWeight: 600,
             color: 'var(--color-text-secondary)',
-            icon: '📦',
-          },
-          {
-            label: 'Spoilage Risk',
-            value: `${recommendation.spoilage_risk_percent}%`,
-            color: recommendation.spoilage_risk_percent > 5 ? '#f87171' : '#fbbf24',
-            icon: '⚠',
-          },
-        ].map(m => (
-          <div key={m.label} style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0.75rem',
-            textAlign: 'center',
           }}>
-            <div style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{m.icon}</div>
-            <div style={{ fontSize: 'clamp(0.875rem, 2vw, 1rem)', fontWeight: 800, color: m.color, fontFamily: 'var(--font-display)' }}>
-              {m.value}
-            </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-              {m.label}
-            </div>
+            <ShieldCheck size={13} color="#4ade80" />
+            <span>{confidencePercent}% Confidence</span>
           </div>
-        ))}
+          <Badge variant={recommendation.risk === 'LOW' ? 'success' : recommendation.risk === 'MEDIUM' ? 'warning' : 'danger'}>
+            {recommendation.risk} Risk
+          </Badge>
+        </div>
       </div>
 
-      {/* Net Realisation Comparison */}
+      {/* Primary Financial Benefit Banner */}
       <div style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--color-surface-700)',
+        border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-md)',
-        padding: '0.875rem 1rem',
+        padding: '1rem 1.25rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem',
         marginBottom: '1rem',
-        display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap',
       }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Sell Today</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', color: 'var(--color-text-secondary)' }}>
-            ₹{recommendation.net_realisation_current.toLocaleString('en-IN')}
+        <div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>
+            Expected Net Benefit over Immediate Sale
+          </div>
+          <div className="price-display" style={{ fontSize: '1.5rem', fontWeight: 900, color: '#4ade80' }}>
+            +{formatINR(gain)}
           </div>
         </div>
-        <div style={{
-          background: 'rgba(34,197,94,0.15)',
-          border: '1px solid rgba(34,197,94,0.2)',
-          borderRadius: 8,
-          padding: '0.375rem 0.75rem',
-          fontSize: '0.875rem', fontWeight: 700, color: '#4ade80',
-        }}>
-          +{formatCurrency(gain)}
-        </div>
-        <div style={{ flex: 1, textAlign: 'right' }}>
-          <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
-            Sell in {recommendation.recommended_days} days
+
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>
+            Target Net Realisation
           </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', color: '#4ade80' }}>
-            ₹{recommendation.net_realisation_recommended.toLocaleString('en-IN')}
+          <div className="price-display" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
+            {formatINR(recommendation.net_realisation_recommended)}
           </div>
         </div>
       </div>
 
-      {/* Why section (expandable) */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        style={{
-          width: '100%', background: 'transparent', border: 'none',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '0.375rem', cursor: 'pointer', padding: '0.5rem',
-          color: 'var(--color-text-muted)', fontSize: '0.8rem', fontWeight: 500,
-          borderRadius: 'var(--radius-sm)',
-          transition: 'color 150ms',
-        }}
-      >
-        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        {expanded ? 'Hide details' : 'Why this recommendation?'}
-      </button>
+      {/* Summary Reason */}
+      <p style={{
+        fontSize: '0.875rem',
+        color: 'var(--color-text-secondary)',
+        lineHeight: 1.6,
+        margin: '0 0 1rem',
+      }}>
+        {recommendation.reason}
+      </p>
 
+      {/* Visual Math Breakdown (Expandable) */}
       {expanded && (
-        <div className="animate-fade-in" style={{
-          marginTop: '0.75rem',
-          background: 'rgba(255,255,255,0.03)',
+        <div style={{
+          background: 'var(--color-surface-900)',
+          border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-md)',
-          padding: '0.875rem 1rem',
-          fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.7,
+          padding: '1rem 1.25rem',
+          marginBottom: '1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
         }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <AlertTriangle size={14} style={{ color: '#fbbf24', flexShrink: 0, marginTop: 3 }} />
-            <span>Risk Level: <strong style={{ color: recommendation.risk === 'LOW' ? '#4ade80' : recommendation.risk === 'MEDIUM' ? '#fbbf24' : '#f87171' }}>{recommendation.risk}</strong></span>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+            Mathematical Calculation Breakdown
           </div>
-          <p>{recommendation.reason}</p>
-          <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-            Generated at {new Date(recommendation.generated_at).toLocaleString('en-IN')}
-          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '0.75rem',
+            fontSize: '0.8rem',
+          }}>
+            <div style={{ background: 'var(--color-surface-700)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>Projected Market Upside</div>
+              <div style={{ fontWeight: 700, color: '#4ade80', marginTop: '0.2rem' }}>
+                +{formatINR(gain + recommendation.storage_cost_total)}
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--color-surface-700)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>Storage Holding Cost</div>
+              <div style={{ fontWeight: 700, color: '#f87171', marginTop: '0.2rem' }}>
+                -{formatINR(recommendation.storage_cost_total)}
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--color-surface-700)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>Spoilage Risk Factor</div>
+              <div style={{ fontWeight: 700, color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+                {recommendation.spoilage_risk_percent}% estimated
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* CTA */}
-      {onAction && (
+      {/* Action Footer */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
         <button
-          className="btn btn-primary btn-block"
-          style={{ marginTop: '1rem' }}
-          onClick={onAction}
+          className="btn btn-ghost btn-sm"
+          style={{ paddingLeft: 0, color: 'var(--color-text-muted)', fontSize: '0.8rem' }}
+          onClick={() => setExpanded(!expanded)}
         >
-          <DecisionIcon size={16} />
-          {recommendation.decision === 'SELL_NOW' ? 'Find Buyers Now' : `Set Alert for ${recommendation.recommended_days} Days`}
+          {expanded ? <><ChevronUp size={15} /> Hide Calculation Math</> : <><ChevronDown size={15} /> How is this calculated?</>}
         </button>
-      )}
+
+        {onAction && (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onAction}
+            iconRight={<ArrowRight size={15} />}
+          >
+            Find Matched Buyers
+          </Button>
+        )}
+      </div>
     </div>
   )
 }

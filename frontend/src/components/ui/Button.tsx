@@ -14,7 +14,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   block?: boolean
   icon?: ReactNode
   iconRight?: ReactNode
-  children: ReactNode
+  children?: ReactNode
 }
 
 export default function Button({

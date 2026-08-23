@@ -206,7 +206,7 @@ export default function LoginPage() {
 
         {/* Trust badges */}
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
-          {['🔒 Secure OTP Login', '🇮🇳 SIH 2026', '🌾 Farmer First'].map(badge => (
+          {['🔒 Secure OTP Login', '🇮🇳 Made for India', '🌾 Farmer First'].map(badge => (
             <span key={badge} style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{badge}</span>
           ))}
         </div>

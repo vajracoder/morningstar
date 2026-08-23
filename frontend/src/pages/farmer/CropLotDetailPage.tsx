@@ -1,15 +1,13 @@
 // ============================================================
-// MORNINGSTAR — CROP LOT DETAIL PAGE
-// Complete overview of a crop lot: Quality report, AI recommendation,
-// price forecast summary, and direct links to Market, Rec, & Buyers
+// MORNINGSTAR — CROP LOT DETAIL PAGE (Production Redesign)
 // ============================================================
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  Wheat, MapPin, Calendar, Warehouse, ShieldCheck,
+  Wheat, MapPin, Warehouse, ShieldCheck,
   TrendingUp, Brain, Users, ArrowLeft, ArrowUpRight,
-  CheckCircle2, AlertCircle, Droplets, Sparkles, Scale
+  AlertCircle, Sparkles, Scale
 } from 'lucide-react'
 import { getCropLot, getQualityReport } from '@/api/crops'
 import { getForecast } from '@/api/forecast'
@@ -60,8 +58,7 @@ export default function CropLotDetailPage() {
 
   if (loading) {
     return (
-      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <SkeletonCard />
+      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: 1000, margin: '0 auto' }}>
         <SkeletonCard />
         <SkeletonCard />
       </div>
@@ -70,7 +67,7 @@ export default function CropLotDetailPage() {
 
   if (!lot) {
     return (
-      <div className="card" style={{ textAlign: 'center', padding: '3rem 1.5rem' }}>
+      <div className="card" style={{ textAlign: 'center', padding: '3rem 1.5rem', maxWidth: 600, margin: '0 auto' }}>
         <AlertCircle size={40} color="var(--color-danger)" style={{ margin: '0 auto 1rem' }} />
         <h2>Crop Lot Not Found</h2>
         <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
@@ -87,16 +84,18 @@ export default function CropLotDetailPage() {
   const totalValue = lot.quantity_quintal * currentPrice
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Back link & Actions */}
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: 1000, margin: '0 auto' }}>
+      {/* Navigation Top Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-        <button
-          className="btn btn-ghost btn-sm"
+        <Button
+          variant="ghost"
+          size="sm"
           style={{ paddingLeft: 0 }}
           onClick={() => navigate('/crop-lots')}
+          icon={<ArrowLeft size={16} />}
         >
-          <ArrowLeft size={16} /> All Crop Lots
-        </button>
+          All Crop Lots
+        </Button>
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <Button
@@ -127,56 +126,40 @@ export default function CropLotDetailPage() {
       </div>
 
       {/* Lot Primary Banner */}
-      <div className="card" style={{
-        background: 'linear-gradient(135deg, rgba(22,163,74,0.1) 0%, var(--color-surface-800) 70%)',
-        border: '1px solid rgba(34,197,94,0.25)',
-        padding: '1.5rem',
-      }}>
+      <div className="card-hero">
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, #15803d, #22c55e)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(34,197,94,0.3)',
-              flexShrink: 0,
-            }}>
-              <Wheat size={30} color="#fff" />
+            <div
+              className="icon-box-lg"
+              style={{
+                background: 'rgba(34, 197, 94, 0.15)',
+                border: '1px solid rgba(34, 197, 94, 0.3)',
+                color: '#4ade80',
+              }}
+            >
+              <Wheat size={28} />
             </div>
 
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--color-text-primary)' }}>
                   {lot.crop_name}
-                  {lot.variety && <span style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>({lot.variety})</span>}
+                  {lot.variety && <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--color-text-muted)', marginLeft: '0.4rem' }}>({lot.variety})</span>}
                 </h1>
-                <Badge variant={lot.grade === 'A' ? 'success' : lot.grade === 'B' ? 'warning' : 'neutral'}>
-                  Grade {lot.grade}
-                </Badge>
-                <Badge variant="info">
-                  {lot.status.replace('_', ' ')}
-                </Badge>
+                <Badge variant="success">Grade {lot.grade}</Badge>
+                <Badge variant="info">{lot.status.replace('_', ' ')}</Badge>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginTop: '0.5rem', flexWrap: 'wrap', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <Scale size={14} /> <strong>{lot.quantity_quintal}</strong> Quintals
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.35rem', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <Scale size={13} /> <strong>{lot.quantity_quintal}</strong> Quintals
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <MapPin size={14} /> {lot.location}, {lot.district}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <MapPin size={13} /> {lot.location}, {lot.district}
                 </span>
                 {lot.storage_type && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <Warehouse size={14} /> {lot.storage_type} ({lot.storage_capacity_days || 30}d safe)
-                  </span>
-                )}
-                {lot.harvest_date && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <Calendar size={14} /> Harvest: {new Date(lot.harvest_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <Warehouse size={13} /> {lot.storage_type} ({lot.storage_capacity_days || 30}d safe)
                   </span>
                 )}
               </div>
@@ -184,125 +167,125 @@ export default function CropLotDetailPage() {
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Est. Total Valuation</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Estimated Valuation
+            </div>
             <div className="price-display" style={{ fontSize: '1.75rem', fontWeight: 900, color: '#4ade80' }}>
               ₹{totalValue.toLocaleString('en-IN')}
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-              @ ₹{currentPrice.toLocaleString('en-IN')}/quintal
+              @ ₹{currentPrice.toLocaleString('en-IN')}/q modal rate
             </div>
           </div>
         </div>
       </div>
 
-      {/* AI Quality Report Card */}
+      {/* AI Quality Report — Benchmark Grid */}
       {quality && (
-        <div className="card" style={{ padding: '1.5rem' }}>
+        <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              <ShieldCheck size={22} color="#4ade80" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldCheck size={20} color="#4ade80" />
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>AI Crop Quality Report</h3>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>AI Crop Quality Verification</h3>
                 <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                   Graded on {new Date(quality.graded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Sparkles size={16} color="#fbbf24" />
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fbbf24' }}>
-                {Math.round(quality.ai_confidence * 100)}% AI Confidence
-              </span>
+            <div style={{
+              background: 'var(--color-surface-700)',
+              padding: '0.25rem 0.65rem',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--color-border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#fbbf24',
+            }}>
+              <Sparkles size={13} />
+              <span>{Math.round(quality.ai_confidence * 100)}% Confidence</span>
             </div>
           </div>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: '1rem',
             marginBottom: '1rem',
           }}>
+            {/* Moisture */}
             <div style={{ background: 'var(--color-surface-700)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
-                <Droplets size={14} color="#60a5fa" /> Moisture Content
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Moisture Content</span>
+                <Badge variant="success">Optimal</Badge>
               </div>
-              <div className="price-display" style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
+              <div className="price-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
                 {quality.moisture_percent ?? 12.5}%
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#4ade80' }}>Optimal (&lt; 14%)</span>
+              <span style={{ fontSize: '0.7rem', color: '#4ade80' }}>Benchmark: &lt; 14.0%</span>
             </div>
 
+            {/* Protein */}
             <div style={{ background: 'var(--color-surface-700)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
-                <CheckCircle2 size={14} color="#4ade80" /> Protein Content
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Protein Content</span>
+                <Badge variant="success">High</Badge>
               </div>
-              <div className="price-display" style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
+              <div className="price-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
                 {quality.protein_percent ?? 11.2}%
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#4ade80' }}>High (Grade A standard)</span>
+              <span style={{ fontSize: '0.7rem', color: '#4ade80' }}>Export Standard: &gt; 10.5%</span>
             </div>
 
+            {/* Impurity */}
             <div style={{ background: 'var(--color-surface-700)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
-                <AlertCircle size={14} color="#fbbf24" /> Foreign Impurities
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Foreign Matter</span>
+                <Badge variant="success">Clean</Badge>
               </div>
-              <div className="price-display" style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
+              <div className="price-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
                 {quality.impurity_percent ?? 1.8}%
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#4ade80' }}>Well within limit (&lt; 2%)</span>
+              <span style={{ fontSize: '0.7rem', color: '#4ade80' }}>Tolerance: &lt; 2.0%</span>
             </div>
           </div>
 
           {quality.notes && (
-            <p style={{
+            <div style={{
               fontSize: '0.85rem',
               color: 'var(--color-text-secondary)',
-              background: 'rgba(34,197,94,0.05)',
-              border: '1px solid rgba(34,197,94,0.15)',
+              background: 'var(--color-surface-700)',
+              border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-sm)',
               padding: '0.75rem 1rem',
-              margin: 0,
             }}>
               💡 <strong>AI Agronomist Note:</strong> {quality.notes}
-            </p>
+            </div>
           )}
         </div>
       )}
 
       {/* AI Recommendation Snapshot */}
       {recommendation && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Brain size={20} color="#f59e0b" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>AI Sell / Wait Recommendation</h3>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/crop-lots/${lot.id}/recommendation`)}
-            >
-              Full Analysis <ArrowUpRight size={14} />
-            </Button>
-          </div>
-
-          <AIRecommendationCard
-            recommendation={recommendation}
-            onAction={() => navigate(`/crop-lots/${lot.id}/buyers`)}
-          />
-        </div>
+        <AIRecommendationCard
+          recommendation={recommendation}
+          onAction={() => navigate(`/crop-lots/${lot.id}/buyers`)}
+        />
       )}
 
-      {/* Price Forecast Chart Section */}
+      {/* 14-Day Price Forecast Section */}
       {forecast && (
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
                 14-Day Price Projection
               </h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '0.2rem 0 0' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: '0.15rem 0 0' }}>
                 Forecasted APMC modal rates for {lot.crop_name}
               </p>
             </div>
@@ -310,8 +293,9 @@ export default function CropLotDetailPage() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(`/crop-lots/${lot.id}/market`)}
+              iconRight={<ArrowUpRight size={14} />}
             >
-              Explore Mandis <ArrowUpRight size={14} />
+              Explore Mandis
             </Button>
           </div>
 

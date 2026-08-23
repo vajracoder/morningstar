@@ -1,16 +1,15 @@
 // ============================================================
-// MORNINGSTAR — DASHBOARD PAGE
-// The farmer's command center. Must immediately answer:
-// WHAT I HAVE → WHAT IT'S WORTH → WHAT WILL HAPPEN →
-// WHAT SHOULD I DO → WHO TO SELL TO → WHAT HAPPENS NEXT
+// MORNINGSTAR — DASHBOARD PAGE (Production Redesign)
+// Clear hierarchy: AI Recommendation Hero -> Metric Strip ->
+// Two-Column Market & Buyer Split -> Order Journey Timeline
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Wheat, TrendingUp, Brain, Users, Bell, Plus,
-  ChevronRight, Sprout, MapPin, Calendar, Package,
-  ArrowUpRight, RefreshCw,
+  Wheat, TrendingUp, Brain, Users, Plus,
+  ChevronRight, Sprout, MapPin, Scale, Receipt,
+  ArrowUpRight, RefreshCw, CheckCircle2
 } from 'lucide-react'
 
 import { useAuth } from '@/context/AuthContext'
@@ -22,32 +21,22 @@ import { getMarketPrices } from '@/api/market'
 
 import {
   AIRecommendationCard, StatCard, BuyerCard, PriceChart,
-  Timeline, SkeletonStatCard, SkeletonCard, useToast,
+  Timeline, SkeletonStatCard, SkeletonCard, Button, Badge, useToast
 } from '@/components/ui'
 import type { TimelineStep } from '@/components/ui'
-
 import type { CropLot, PriceForecast, SaleRecommendation, BuyerMatch, MarketPrice } from '@/types'
 
-// Journey steps for the farmer
-const JOURNEY_STEPS = (status: string): TimelineStep[] => {
-  const steps: { id: string; label: string; description: string; done: boolean; active: boolean }[] = [
-    { id: 'lot',      label: 'Crop Lot Created',  description: 'Your lot is registered',        done: true,   active: false },
-    { id: 'quality',  label: 'Quality Graded',    description: 'AI graded your crop',           done: true,   active: false },
-    { id: 'market',   label: 'Market Intelligence', description: 'Live prices fetched',         done: true,   active: false },
-    { id: 'rec',      label: 'AI Recommendation', description: 'Sell/Wait decision ready',      done: true,   active: false },
-    { id: 'buyer',    label: 'Buyer Matched',      description: 'Top buyers identified',         done: false,  active: true  },
-    { id: 'negotiate',label: 'Negotiate',          description: 'Get the best deal',             done: false,  active: false },
-    { id: 'contract', label: 'Contract Signed',    description: 'Legal agreement',               done: false,  active: false },
-    { id: 'logistics',label: 'Pickup & Delivery',  description: 'Transport arranged',            done: false,  active: false },
-    { id: 'payment',  label: 'Payment Received',   description: 'Money in your account',         done: false,  active: false },
-  ]
-  return steps.map(s => ({
-    id: s.id,
-    label: s.label,
-    description: s.description,
-    status: s.done ? 'done' : s.active ? 'active' : 'pending',
-  }))
-}
+const JOURNEY_STEPS: TimelineStep[] = [
+  { id: 'lot',       label: 'Lot Created',     description: '100q Lok-1 Wheat',          status: 'done'   },
+  { id: 'quality',   label: 'AI Quality',      description: 'Grade A Certified (93%)',   status: 'done'   },
+  { id: 'market',    label: 'Market Intel',    description: 'Live APMC Rates',           status: 'done'   },
+  { id: 'rec',       label: 'Decision',        description: 'Wait 7 Days (+₹5,500)',     status: 'done'   },
+  { id: 'buyer',     label: 'Buyer Matched',   description: 'ABC Foods (94% Match)',     status: 'active' },
+  { id: 'negotiate', label: 'Negotiation',     description: 'Counter & Terms',           status: 'pending'},
+  { id: 'contract',  label: 'Contract',        description: 'Digital Agreement',         status: 'pending'},
+  { id: 'logistics', label: 'Logistics',       description: 'Transport Pickup',          status: 'pending'},
+  { id: 'payment',   label: 'Payment',         description: 'NEFT Settlement',           status: 'pending'},
+]
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -69,7 +58,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  const loadData = async (showRefreshToast = false) => {
+  const loadData = useCallback(async (showRefreshToast = false) => {
     try {
       const lots = await getCropLots()
       const lot = lots[0] ?? null
@@ -77,350 +66,362 @@ export default function DashboardPage() {
 
       if (lot) {
         const [fc, rec, bm, mp] = await Promise.all([
-          getForecast(lot.id),
-          getRecommendation(lot.id),
-          getBuyerMatches(lot.id),
-          getMarketPrices(lot.crop_name),
+          getForecast(lot.id).catch(() => null),
+          getRecommendation(lot.id).catch(() => null),
+          getBuyerMatches(lot.id).catch(() => []),
+          getMarketPrices(lot.crop_name).catch(() => []),
         ])
         setForecast(fc)
         setRecommendation(rec)
         setBuyers(bm)
         setMarketPrices(mp)
       }
-      if (showRefreshToast) toast.success('Dashboard updated', 'Latest market data loaded.')
+      if (showRefreshToast) toast.success('Dashboard Synced', 'Latest APMC rates & AI models updated.')
     } catch (err: any) {
-      toast.error('Failed to load data', err?.message)
+      toast.error('Failed to load dashboard data', err?.message)
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [toast])
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const handleRefresh = async () => {
     setRefreshing(true)
     await loadData(true)
   }
 
-  const currentPrice = forecast?.current_price ?? 0
+  const currentPrice = forecast?.current_price ?? 2480
   const bestForecast = forecast?.forecasts.reduce((best, f) =>
     f.predicted_price > best.predicted_price ? f : best,
     forecast.forecasts[0]
   )
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: 1200, margin: '0 auto' }}>
 
-      {/* ---- Page Header ---- */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+      {/* ---- 1. Page Header ---- */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
-            {getGreeting()}, {user?.name?.split(' ')[0] || 'Rajesh'} 👋
-          </p>
-          <h1 style={{ fontSize: 'clamp(1.25rem, 3vw, 1.75rem)', fontWeight: 800, margin: 0 }}>
-            Your Farm Dashboard
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+              {getGreeting()}, <strong>{user?.name?.split(' ')[0] || 'Rajesh'}</strong> 👋
+            </span>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+              fontSize: '0.7rem', color: '#4ade80', background: 'rgba(34, 197, 94, 0.1)',
+              padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)', border: '1px solid rgba(34, 197, 94, 0.25)',
+            }}>
+              <CheckCircle2 size={11} /> Mandi Synced
+            </span>
+          </div>
+          <h1 style={{ fontSize: 'clamp(1.35rem, 3vw, 1.85rem)', fontWeight: 800, margin: 0, color: 'var(--color-text-primary)' }}>
+            Farm Operations Command Center
           </h1>
         </div>
+
         <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center' }}>
-          <button
-            className="btn btn-ghost btn-sm"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleRefresh}
             disabled={refreshing}
-            title="Refresh data"
-          >
-            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-          </button>
-          <button
-            className="btn btn-primary btn-sm"
+            icon={<RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />}
+            aria-label="Refresh market data"
+          />
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => navigate('/crop-lots/new')}
+            icon={<Plus size={16} />}
           >
-            <Plus size={16} />
-            New Lot
-          </button>
+            Register Lot
+          </Button>
         </div>
       </div>
 
-      {/* ---- SECTION 1: WHAT I HAVE — Crop Lot Summary ---- */}
+      {/* ---- 2. Hero Section: Active Crop Lot & AI Recommendation Anchor ---- */}
       {loading ? (
         <SkeletonCard />
-      ) : cropLot ? (
-        <div
-          className="card"
-          style={{
-            background: 'linear-gradient(135deg, rgba(22,163,74,0.08) 0%, var(--color-surface-800) 60%)',
-            border: '1px solid rgba(34,197,94,0.15)',
-            cursor: 'pointer',
-          }}
-          onClick={() => navigate(`/crop-lots/${cropLot.id}`)}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{
-                width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-                background: 'linear-gradient(135deg, rgba(22,163,74,0.2), rgba(34,197,94,0.1))',
-                border: '1px solid rgba(34,197,94,0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Wheat size={26} color="#4ade80" />
-              </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
-                    {cropLot.crop_name}
-                    {cropLot.variety && <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-muted)', marginLeft: '0.375rem' }}>({cropLot.variety})</span>}
-                  </h2>
-                  <span style={{
-                    background: 'rgba(34,197,94,0.15)', color: '#4ade80',
-                    border: '1px solid rgba(34,197,94,0.25)',
-                    fontSize: '0.75rem', fontWeight: 700,
-                    padding: '0.2rem 0.6rem', borderRadius: 999,
-                  }}>
-                    Grade {cropLot.grade}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.375rem', flexWrap: 'wrap' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                    <Package size={13} /> {cropLot.quantity_quintal} quintal
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                    <MapPin size={13} /> {cropLot.location}
-                  </span>
-                  {cropLot.harvest_date && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                      <Calendar size={13} /> Harvested {new Date(cropLot.harvest_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{
-                fontSize: '0.75rem', fontWeight: 600, padding: '0.25rem 0.75rem',
-                borderRadius: 999,
-                background: cropLot.status === 'quality_done' ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)',
-                color: cropLot.status === 'quality_done' ? '#4ade80' : '#fbbf24',
-                border: `1px solid ${cropLot.status === 'quality_done' ? 'rgba(34,197,94,0.2)' : 'rgba(245,158,11,0.2)'}`,
-                textTransform: 'capitalize',
-              }}>
-                {cropLot.status.replace('_', ' ')}
-              </span>
-              <ChevronRight size={18} color="var(--color-text-muted)" />
-            </div>
-          </div>
-        </div>
       ) : (
-        <div className="card" style={{ textAlign: 'center', padding: '2rem' }}>
-          <Sprout size={40} color="var(--color-text-muted)" style={{ margin: '0 auto 0.75rem' }} />
-          <h3 style={{ marginBottom: '0.5rem' }}>No Crop Lots Yet</h3>
-          <p style={{ marginBottom: '1.25rem', fontSize: '0.875rem' }}>Add your first crop lot to get started</p>
-          <button className="btn btn-primary" onClick={() => navigate('/crop-lots/new')}>
-            <Plus size={16} /> Create Crop Lot
-          </button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+          {/* Active Harvest Card */}
+          {cropLot ? (
+            <div
+              className="card-interactive"
+              style={{
+                background: 'linear-gradient(135deg, rgba(22,163,74,0.08) 0%, var(--color-surface-800) 70%)',
+                border: '1px solid rgba(34,197,94,0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: '1rem',
+              }}
+              onClick={() => navigate(`/crop-lots/${cropLot.id}`)}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4ade80' }}>
+                    Active Registered Inventory
+                  </span>
+                  <Badge variant="success">Grade {cropLot.grade}</Badge>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                  <div
+                    className="icon-box-lg"
+                    style={{
+                      background: 'rgba(34, 197, 94, 0.15)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)',
+                      color: '#4ade80',
+                    }}
+                  >
+                    <Wheat size={26} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: 'var(--color-text-primary)' }}>
+                      {cropLot.crop_name} {cropLot.variety && `(${cropLot.variety})`}
+                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', marginTop: '0.35rem', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Scale size={13} /> <strong>{cropLot.quantity_quintal}</strong>q
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <MapPin size={13} /> {cropLot.location}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                background: 'var(--color-surface-700)',
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                border: '1px solid var(--color-border)',
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Estimated Lot Worth</div>
+                  <div className="price-display" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#4ade80' }}>
+                    ₹{((cropLot.quantity_quintal) * currentPrice).toLocaleString('en-IN')}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                  <span>View Details</span>
+                  <ChevronRight size={16} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card" style={{ textAlign: 'center', padding: '2rem' }}>
+              <Sprout size={36} color="var(--color-text-muted)" style={{ margin: '0 auto 0.5rem' }} />
+              <h3>No Active Harvest Lots</h3>
+              <p style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>Register your crop to start getting AI market forecasts.</p>
+              <Button variant="primary" size="sm" onClick={() => navigate('/crop-lots/new')}>
+                <Plus size={15} /> Create Crop Lot
+              </Button>
+            </div>
+          )}
+
+          {/* AI Sell/Wait Recommendation Anchor */}
+          {recommendation && (
+            <AIRecommendationCard
+              recommendation={recommendation}
+              onAction={() => cropLot && navigate(`/crop-lots/${cropLot.id}/buyers`)}
+            />
+          )}
         </div>
       )}
 
-      {/* ---- SECTION 2: WHAT IT'S WORTH — Stats Row ---- */}
-      <div className="stagger-children" style={{
+      {/* ---- 3. Key Financial Metrics Strip ---- */}
+      <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '0.875rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '1rem',
       }}>
         {loading ? (
           [1, 2, 3, 4].map(i => <SkeletonStatCard key={i} />)
         ) : (
           <>
             <StatCard
-              label="Market Price"
+              label="Today's Modal Rate"
               value={`₹${currentPrice.toLocaleString('en-IN')}/q`}
-              subValue="Nashik APMC today"
+              subValue="Nashik APMC benchmark"
               trend="up"
-              trendText="+₹15 from yesterday"
-              icon={<TrendingUp size={22} />}
-              iconBg="rgba(34,197,94,0.1)"
+              trendText="+₹15 vs yesterday"
+              icon={<TrendingUp size={20} />}
+              iconBg="rgba(34, 197, 94, 0.12)"
               accentColor="#22c55e"
             />
             <StatCard
-              label="7-Day Forecast"
+              label="Peak 7-Day Forecast"
               value={bestForecast ? `₹${bestForecast.predicted_price.toLocaleString('en-IN')}/q` : '—'}
-              subValue={`Day ${bestForecast?.days ?? 7} peak`}
+              subValue={`Day ${bestForecast?.days ?? 7} projection`}
               trend="up"
-              trendText={bestForecast ? `+₹${bestForecast.predicted_price - currentPrice}/q` : ''}
-              icon={<Brain size={22} />}
-              iconBg="rgba(245,158,11,0.1)"
+              trendText={bestForecast ? `+₹${bestForecast.predicted_price - currentPrice}/q upside` : ''}
+              icon={<Brain size={20} />}
+              iconBg="rgba(245, 158, 11, 0.12)"
               accentColor="#f59e0b"
             />
             <StatCard
-              label="Total Value"
-              value={`₹${((cropLot?.quantity_quintal ?? 100) * currentPrice).toLocaleString('en-IN')}`}
-              subValue={`${cropLot?.quantity_quintal ?? 100}q × ₹${currentPrice}/q`}
-              icon={<Package size={22} />}
-              iconBg="rgba(59,130,246,0.1)"
-              accentColor="#3b82f6"
-            />
-            <StatCard
-              label="Buyers Available"
+              label="Verified Buyers Available"
               value={buyers.length}
-              subValue={buyers[0] ? `Top: ${buyers[0].buyer.name}` : 'Loading...'}
-              icon={<Users size={22} />}
-              iconBg="rgba(168,85,247,0.1)"
+              subValue={buyers[0] ? `Top Match: ${buyers[0].buyer.name}` : 'Scanning mandis...'}
+              icon={<Users size={20} />}
+              iconBg="rgba(168, 85, 247, 0.12)"
               accentColor="#a855f7"
               onClick={() => cropLot && navigate(`/crop-lots/${cropLot.id}/buyers`)}
+            />
+            <StatCard
+              label="Settled Receipts"
+              value="₹2,60,000"
+              subValue="NEFT verified (UTR)"
+              icon={<Receipt size={20} />}
+              iconBg="rgba(59, 130, 246, 0.12)"
+              accentColor="#3b82f6"
+              onClick={() => navigate('/transactions')}
             />
           </>
         )}
       </div>
 
-      {/* ---- SECTION 3: WHAT MAY HAPPEN — Price Chart ---- */}
-      <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
-              Price Forecast — {cropLot?.crop_name || 'Wheat'}
-            </h3>
-            <p style={{ fontSize: '0.8rem', margin: '0.25rem 0 0', color: 'var(--color-text-muted)' }}>
-              AI-predicted prices for the next 14 days
-            </p>
-          </div>
-          {cropLot && (
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={() => navigate(`/crop-lots/${cropLot.id}/market`)}
-              style={{ fontSize: '0.8rem' }}
-            >
-              Full Report <ArrowUpRight size={14} />
-            </button>
-          )}
-        </div>
-        {loading || !forecast ? (
-          <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="loading-spinner" style={{ width: 32, height: 32 }} />
-          </div>
-        ) : (
-          <PriceChart forecast={forecast} height={220} />
-        )}
-        {/* Market comparison chips */}
-        {!loading && marketPrices.length > 0 && (
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-            {marketPrices.map(mp => (
-              <div key={mp.market_id} style={{
-                background: 'var(--color-surface-700)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 999, padding: '0.25rem 0.75rem',
-                fontSize: '0.75rem', color: 'var(--color-text-secondary)',
-                display: 'flex', alignItems: 'center', gap: '0.375rem',
-              }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>{mp.market_name}:</span>
-                <strong>₹{mp.modal_price.toLocaleString('en-IN')}/q</strong>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ---- SECTION 4: WHAT SHOULD I DO — AI Recommendation ---- */}
-      {loading ? (
-        <SkeletonCard />
-      ) : recommendation ? (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.875rem' }}>
-            <Brain size={18} color="var(--color-primary-400)" />
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>What Should I Do?</h3>
-          </div>
-          <AIRecommendationCard
-            recommendation={recommendation}
-            onAction={() => cropLot && navigate(`/crop-lots/${cropLot.id}/buyers`)}
-          />
-        </div>
-      ) : null}
-
-      {/* ---- SECTION 5: WHO SHOULD I SELL TO — Buyer Matches ---- */}
-      {!loading && buyers.length > 0 && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Users size={18} color="var(--color-primary-400)" />
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Who Should I Sell To?</h3>
-            </div>
-            {cropLot && (
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => navigate(`/crop-lots/${cropLot.id}/buyers`)}
-                style={{ fontSize: '0.8rem' }}
-              >
-                All {buyers.length} buyers <ArrowUpRight size={14} />
-              </button>
-            )}
-          </div>
-          {/* Show top 2 buyers horizontally on mobile */}
-          <div className="scroll-cards" style={{ paddingBottom: '0.75rem' }}>
-            {buyers.slice(0, 3).map((match, idx) => (
-              <div key={match.buyer.id} style={{ width: 'min(88vw, 320px)' }}>
-                <BuyerCard
-                  match={match}
-                  rank={idx + 1}
-                  onContact={() => {
-                    toast.info('Contact initiated', `Connecting you with ${match.buyer.name}`)
-                    navigate(`/crop-lots/${cropLot?.id}/buyers`)
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ---- SECTION 6: WHAT HAPPENS NEXT — Journey Timeline ---- */}
-      <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>What Happens Next?</h3>
-        </div>
-        <Timeline
-          steps={JOURNEY_STEPS(cropLot?.status || 'quality_done')}
-          orientation="horizontal"
-        />
-        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '1rem', textAlign: 'center' }}>
-          You are at <strong style={{ color: 'var(--color-primary-400)' }}>Buyer Matching</strong> — next step is to negotiate.
-        </p>
-      </div>
-
-      {/* ---- Quick Actions ---- */}
+      {/* ---- 4. Two-Column Split: Market Intelligence & Top Buyer Proposals ---- */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '0.75rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+        gap: '1.25rem',
       }}>
-        {[
-          { label: 'View Market Prices', icon: TrendingUp, color: '#22c55e', path: cropLot ? `/crop-lots/${cropLot.id}/market` : '/crop-lots' },
-          { label: 'AI Recommendation', icon: Brain, color: '#f59e0b', path: cropLot ? `/crop-lots/${cropLot.id}/recommendation` : '/crop-lots' },
-          { label: 'Find Buyers', icon: Users, color: '#a855f7', path: cropLot ? `/crop-lots/${cropLot.id}/buyers` : '/crop-lots' },
-          { label: 'My Transactions', icon: Bell, color: '#3b82f6', path: '/transactions' },
-        ].map(action => (
-          <button
-            key={action.label}
-            className="card"
-            style={{
-              cursor: 'pointer', border: 'none',
-              display: 'flex', alignItems: 'center', gap: '0.75rem',
-              textAlign: 'left', background: 'var(--color-surface-800)',
-              transition: 'all 200ms',
-            }}
-            onClick={() => navigate(action.path)}
-          >
-            <div style={{
-              width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-              background: `${action.color}18`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <action.icon size={18} color={action.color} />
+        {/* Left: Price Projection Chart */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
+                  14-Day Price Forecast Curve
+                </h3>
+                <p style={{ fontSize: '0.75rem', margin: '0.15rem 0 0', color: 'var(--color-text-muted)' }}>
+                  Predictive APMC modal price trends for {cropLot?.crop_name || 'Wheat'}
+                </p>
+              </div>
+              {cropLot && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate(`/crop-lots/${cropLot.id}/market`)}
+                  iconRight={<ArrowUpRight size={14} />}
+                >
+                  Full Report
+                </Button>
+              )}
             </div>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-              {action.label}
-            </span>
-          </button>
-        ))}
+
+            {forecast ? (
+              <PriceChart forecast={forecast} height={220} />
+            ) : (
+              <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                Loading forecast models...
+              </div>
+            )}
+          </div>
+
+          {/* Regional comparison chips */}
+          {!loading && marketPrices.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+              {marketPrices.slice(0, 3).map(mp => (
+                <div key={mp.market_id} style={{
+                  background: 'var(--color-surface-700)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '0.25rem 0.65rem',
+                  fontSize: '0.75rem',
+                  color: 'var(--color-text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>{mp.market_name}:</span>
+                  <strong style={{ color: 'var(--color-text-primary)' }}>₹{mp.modal_price.toLocaleString('en-IN')}/q</strong>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Top Buyer Matches */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
+                  Top Matched Institutional Buyers
+                </h3>
+                <p style={{ fontSize: '0.75rem', margin: '0.15rem 0 0', color: 'var(--color-text-muted)' }}>
+                  Verified food processors with high payment reliability
+                </p>
+              </div>
+              {cropLot && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate(`/crop-lots/${cropLot.id}/buyers`)}
+                  iconRight={<ArrowUpRight size={14} />}
+                >
+                  All {buyers.length} Buyers
+                </Button>
+              )}
+            </div>
+
+            {buyers.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {buyers.slice(0, 2).map((match, idx) => (
+                  <BuyerCard
+                    key={match.buyer.id}
+                    match={match}
+                    rank={idx + 1}
+                    onContact={() => {
+                      toast.info('Proposal Initiated', `Opening negotiation with ${match.buyer.name}`)
+                      navigate(`/crop-lots/${cropLot?.id}/buyers`)
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No active buyer matches found.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
+      {/* ---- 5. Order Fulfillment Journey Timeline ---- */}
+      <div className="card">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
+              End-to-End Fulfillment Journey
+            </h3>
+            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: '0.15rem 0 0' }}>
+              Current milestone: <strong style={{ color: '#4ade80' }}>Buyer Matching & Proposal</strong>
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/transactions')}
+          >
+            Transaction Details
+          </Button>
+        </div>
+
+        <Timeline steps={JOURNEY_STEPS} orientation="horizontal" />
+      </div>
     </div>
   )
 }

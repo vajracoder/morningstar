@@ -1,6 +1,5 @@
 # 🌾 MorningStar — AI-Powered Agricultural Market Intelligence & Trade Platform
 
-> **SIH 2026 Problem Statement 26132**  
 > *Smart Farming & FinTech Intelligence for Indian Agriculture*
 
 ---
@@ -36,7 +35,6 @@ Farmer → Crop Lot → Quality → Market Intelligence → Forecast → Sell/Wa
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons, Recharts
 - **Backend & APIs**: Node.js, Express, MongoDB (Mongoose), JWT Authentication
 - **AI & Forecast Engine**: Machine learning predictive models (price forecasting & recommendation engine)
-- **Evaluator Mode**: Built-in 12-step interactive SIH Judge Walkthrough controller (`DemoTourBar`)
 
 ---
 

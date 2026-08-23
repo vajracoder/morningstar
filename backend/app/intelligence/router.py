@@ -2,13 +2,22 @@
 FastAPI Router for Digital Twin Endpoints.
 Adheres strictly to docs/API_CONTRACTS.md.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from database.session import get_db
-from backend.app.intelligence.schemas import DigitalTwinCreateUpdateSchema, DigitalTwinResponseSchema
+from backend.app.intelligence.schemas import (
+    DigitalTwinCreateUpdateSchema,
+    DigitalTwinResponseSchema,
+    SellDecisionResponse,
+    NetRealisationResponse,
+    NetRealisationRequest,
+)
 from backend.app.intelligence.digital_twin import digital_twin_service
+from backend.app.intelligence.net_realisation_service import net_realisation_calculator
+from backend.app.intelligence.sell_decision_service import sell_decision_engine
 
-router = APIRouter(prefix="/api/crop-lots", tags=["Digital Twin (Kuldeep)"])
+router = APIRouter(prefix="/api/crop-lots", tags=["Digital Twin & Decision Engine (Kuldeep)"])
 
 
 @router.get("/{id}/digital-twin", response_model=DigitalTwinResponseSchema, summary="Get Crop Lot Digital Twin")
@@ -37,3 +46,103 @@ def upsert_crop_lot_digital_twin(
     Performs validation on physical quantities, urgency, quality grades, and spoilage risk.
     """
     return digital_twin_service.upsert_digital_twin(db=db, crop_lot_id=id, payload=payload)
+
+
+@router.get("/{id}/recommendation", response_model=SellDecisionResponse, summary="Get Sell vs Wait Recommendation")
+def get_sell_wait_recommendation(id: str, db: Session = Depends(get_db)):
+    """
+    Evaluates whether the farmer should sell now or hold, providing optimal days, projected net gain,
+    confidence score, and transparent risk explanations.
+    """
+    twin = digital_twin_service.get_by_crop_lot_id(db=db, crop_lot_id=id)
+    if not twin:
+        if id == "lot_wheat_nashik_001":
+            crop = "Wheat"
+            quantity = 100.0
+            current_price = 2480.0
+            financial_urgency = "MEDIUM"
+            spoilage_risk = "LOW"
+            storage_days = 3
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Crop lot with id '{id}' not found."
+            )
+    else:
+        crop = twin.crop
+        quantity = twin.quantity
+        current_price = twin.current_market_price
+        financial_urgency = twin.financial_urgency
+        spoilage_risk = twin.spoilage_risk
+        storage_days = twin.storage_days
+
+    return sell_decision_engine.evaluate_decision(
+        crop_lot_id=id,
+        crop=crop,
+        quantity=quantity,
+        current_price=current_price,
+        financial_urgency=financial_urgency,
+        spoilage_risk=spoilage_risk,
+        storage_days=storage_days,
+    )
+
+
+@router.get("/{id}/net-realisation", response_model=NetRealisationResponse, summary="Calculate Crop Lot Net Realisation")
+def get_crop_lot_net_realisation(
+    id: str,
+    offered_price: Optional[float] = Query(default=None, gt=0, description="Optional buyer offer price per quintal"),
+    db: Session = Depends(get_db)
+):
+    """
+    Calculates detailed take-home realization deducting transport, storage, commission, and spoilage.
+    """
+    twin = digital_twin_service.get_by_crop_lot_id(db=db, crop_lot_id=id)
+    if not twin:
+        if id == "lot_wheat_nashik_001":
+            quantity = 100.0
+            price = offered_price or 2600.0
+            quality = "Grade A"
+            spoilage_risk = "LOW"
+            storage_days = 3
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Crop lot with id '{id}' not found."
+            )
+    else:
+        quantity = twin.quantity
+        price = offered_price or (twin.current_market_price if twin.current_market_price > 0 else 2480.0)
+        quality = twin.quality
+        spoilage_risk = twin.spoilage_risk
+        storage_days = twin.storage_days
+
+    return net_realisation_calculator.calculate(
+        crop_lot_id=id,
+        quantity=quantity,
+        offered_price_per_q=price,
+        distance_km=15.0,
+        storage_days=storage_days,
+        quality_grade=quality,
+        spoilage_risk=spoilage_risk,
+    )
+
+
+# Standalone calculation router for arbitrary buyer/marketplace scenarios
+standalone_net_router = APIRouter(prefix="/api/net-realisation", tags=["Net Realisation (Kuldeep)"])
+
+
+@standalone_net_router.post("/calculate", response_model=NetRealisationResponse, summary="Calculate Arbitrary Net Realisation")
+def calculate_custom_net_realisation(payload: NetRealisationRequest):
+    """
+    Standalone endpoint to calculate take-home profit for arbitrary offer prices and parameters.
+    Can be called by Ishan's marketplace/negotiation module.
+    """
+    return net_realisation_calculator.calculate(
+        crop_lot_id=payload.crop_lot_id,
+        quantity=payload.quantity,
+        offered_price_per_q=payload.offered_price_per_q,
+        distance_km=payload.distance_km,
+        storage_days=payload.storage_days,
+        quality_grade=payload.quality_grade,
+        spoilage_risk=payload.spoilage_risk,
+    )

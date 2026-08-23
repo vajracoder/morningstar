@@ -49,3 +49,63 @@ class DigitalTwinResponseSchema(BaseModel):
     spoilage_risk: str
     forecast: Optional[Dict[str, Any]] = None
     updated_at: str
+
+
+# ---------------------------------------------------------
+# Net Realisation Schemas
+# ---------------------------------------------------------
+
+class CostDeductions(BaseModel):
+    transport: float = Field(..., description="Estimated transport/logistics cost in INR")
+    storage: float = Field(..., description="Estimated storage/holding cost in INR")
+    commission: float = Field(..., description="Mandi/platform commission in INR")
+    spoilage: float = Field(..., description="Estimated quality degradation/spoilage loss in INR")
+    financing: float = Field(0.0, description="Financing/interest cost if holding in INR")
+
+
+class NetRealisationResponse(BaseModel):
+    crop_lot_id: Optional[str] = None
+    quantity: float
+    quantity_unit: str = "quintal"
+    offered_price_per_q: float
+    gross_revenue: float
+    deductions: CostDeductions
+    total_deductions: float
+    net_realisation: float = Field(..., description="Net cash realization in farmer's pocket (INR)")
+    net_price_per_q: float = Field(..., description="Effective net realization per quintal (INR/q)")
+    is_simulated_demo: bool = True
+
+
+class NetRealisationRequest(BaseModel):
+    crop_lot_id: Optional[str] = None
+    quantity: float = Field(..., gt=0.0)
+    offered_price_per_q: float = Field(..., gt=0.0)
+    distance_km: float = Field(default=15.0, ge=0.0)
+    storage_days: int = Field(default=3, ge=0)
+    quality_grade: str = Field(default="Grade A")
+    spoilage_risk: str = Field(default="LOW")
+
+
+# ---------------------------------------------------------
+# Sell / Wait Decision Engine Schemas
+# ---------------------------------------------------------
+
+class NetBenefitBreakdown(BaseModel):
+    gross_gain: float
+    storage_cost: float
+    spoilage_cost: float
+    net_gain: float
+
+
+class SellDecisionResponse(BaseModel):
+    crop_lot_id: str
+    decision: str = Field(..., description="WAIT, SELL_NOW, or SPLIT_SALE")
+    recommended_days: int = Field(..., ge=0, description="Recommended holding period in days (0 if SELL_NOW)")
+    expected_gain: float = Field(..., description="Projected net gain over selling immediately (INR)")
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    risk: str = Field(..., description="LOW, MEDIUM, or HIGH")
+    reason: str = Field(..., description="Transparent human-readable explanation")
+    projected_price: float = Field(..., description="Expected price at recommended horizon (INR/q)")
+    net_benefit_breakdown: NetBenefitBreakdown
+    is_simulated_demo: bool = True
+    generated_at: str

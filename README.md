@@ -1,4 +1,4 @@
-# KrishiPlus
+# MorningStar
 
 Agricultural marketplace platform.
 

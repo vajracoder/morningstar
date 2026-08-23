@@ -11,6 +11,8 @@ from database.models import (
     DigitalTwinModel,
     MarketModel,
     MarketPriceModel,
+    BuyerModel,
+    BuyerMatchModel,
 )
 
 
@@ -172,6 +174,87 @@ def init_db_and_seed():
                 is_simulated=True,
             )
             db.add(price)
+
+        # 6. Demo Buyers (ABC Foods, XYZ Agro, Pune Retail Chain)
+        buyers_info = [
+            {
+                "id": "buyer_001",
+                "name": "Suresh Gupta",
+                "company_name": "ABC Foods Pvt Ltd",
+                "location": "Pune Industrial Area",
+                "district": "Pune",
+                "lat": 18.5204,
+                "lng": 73.8567,
+                "preferred_crops": ["Wheat", "Maize"],
+                "accepted_grades": ["Grade A"],
+                "min_qty": 50.0,
+                "max_qty": 500.0,
+                "base_price": 2570.0,
+                "reliability": 0.98,
+                "delivery_pref": "MANDI_DELIVERY",
+                "dispute_free": 98,
+                "total_trades": 100,
+            },
+            {
+                "id": "buyer_002",
+                "name": "Vikram Patel",
+                "company_name": "XYZ Agro Industries",
+                "location": "Nashik MIDC",
+                "district": "Nashik",
+                "lat": 19.9975,
+                "lng": 73.7898,
+                "preferred_crops": ["Wheat", "Soybean"],
+                "accepted_grades": ["Grade A", "Grade B"],
+                "min_qty": 20.0,
+                "max_qty": 300.0,
+                "base_price": 2530.0,
+                "reliability": 0.92,
+                "delivery_pref": "FARMGATE",
+                "dispute_free": 46,
+                "total_trades": 50,
+            },
+            {
+                "id": "buyer_003",
+                "name": "Anil Sharma",
+                "company_name": "Pune Retail Chain",
+                "location": "Kothrud, Pune",
+                "district": "Pune",
+                "lat": 18.5074,
+                "lng": 73.8077,
+                "preferred_crops": ["Wheat", "Basmati Rice"],
+                "accepted_grades": ["Grade A"],
+                "min_qty": 10.0,
+                "max_qty": 80.0,
+                "base_price": 2590.0,
+                "reliability": 0.88,
+                "delivery_pref": "MANDI_DELIVERY",
+                "dispute_free": 22,
+                "total_trades": 25,
+            },
+        ]
+
+        for b_data in buyers_info:
+            buyer = BuyerModel(
+                id=b_data["id"],
+                name=b_data["name"],
+                company_name=b_data["company_name"],
+                location=b_data["location"],
+                district=b_data["district"],
+                latitude=b_data["lat"],
+                longitude=b_data["lng"],
+                preferred_commodities=b_data["preferred_crops"],
+                accepted_grades=b_data["accepted_grades"],
+                min_quantity=b_data["min_qty"],
+                max_quantity=b_data["max_qty"],
+                base_offer_price=b_data["base_price"],
+                reliability_score=b_data["reliability"],
+                delivery_preference=b_data["delivery_pref"],
+                dispute_free_trades=b_data["dispute_free"],
+                total_trades=b_data["total_trades"],
+                verification_status="VERIFIED",
+                created_at=datetime.now(timezone.utc),
+            )
+            db.add(buyer)
 
         db.commit()
     finally:

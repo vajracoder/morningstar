@@ -9,7 +9,11 @@ from contextlib import asynccontextmanager
 from backend.app.core.config import settings
 from backend.app.seed.seed_data import init_db_and_seed
 from backend.app.market.router import router as market_router
-from backend.app.intelligence.router import router as digital_twin_router, standalone_net_router
+from backend.app.intelligence.router import (
+    router as digital_twin_router,
+    standalone_net_router,
+    standalone_buyer_router,
+)
 from backend.app.forecasting.router import router as forecasting_router
 
 
@@ -42,6 +46,7 @@ app.add_middleware(
 app.include_router(market_router)
 app.include_router(digital_twin_router)
 app.include_router(standalone_net_router)
+app.include_router(standalone_buyer_router)
 app.include_router(forecasting_router)
 
 

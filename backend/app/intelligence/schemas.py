@@ -2,7 +2,7 @@
 Pydantic Schemas for Digital Twin and Intelligence Models.
 """
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import date, datetime
 
 
@@ -109,3 +109,42 @@ class SellDecisionResponse(BaseModel):
     net_benefit_breakdown: NetBenefitBreakdown
     is_simulated_demo: bool = True
     generated_at: str
+
+
+# ---------------------------------------------------------
+# Buyer Matching Schemas (7-Factor Weighted Ranking)
+# ---------------------------------------------------------
+
+class FactorBreakdown(BaseModel):
+    quality_score: float = Field(..., description="Quality compliance score (25% weight)")
+    quantity_score: float = Field(..., description="Quantity / lot size fit (20% weight)")
+    price_score: float = Field(..., description="Offered price competitiveness (15% weight)")
+    distance_score: float = Field(..., description="Proximity and transport efficiency (15% weight)")
+    reliability_score: float = Field(..., description="Buyer payment reliability (10% weight)")
+    delivery_score: float = Field(..., description="Logistics / farmgate preference (10% weight)")
+    history_score: float = Field(..., description="Dispute-free trade track record (5% weight)")
+
+
+class BuyerMatchResponse(BaseModel):
+    buyer_id: str
+    name: str
+    company_name: str
+    location: str
+    distance_km: float
+    match_score: float = Field(..., ge=0.0, le=1.0, description="Overall weighted match score")
+    offer_price: float = Field(..., description="Offered purchase price in INR/quintal")
+    estimated_net_realisation: float = Field(..., description="Estimated farmer net earnings in INR")
+    risk: str = Field(..., description="LOW, MEDIUM, or HIGH")
+    reasons: List[str] = Field(..., description="Explainable matching factors")
+    factor_breakdown: FactorBreakdown
+
+
+class BuyerMatchRequest(BaseModel):
+    crop: str = "Wheat"
+    quantity: float = Field(..., gt=0.0)
+    quality_grade: str = "Grade A"
+    location: str = "Nashik"
+    current_market_price: float = 2480.0
+    financial_urgency: str = "MEDIUM"
+    spoilage_risk: str = "LOW"
+

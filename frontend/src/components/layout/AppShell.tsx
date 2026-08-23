@@ -15,32 +15,34 @@ const NAV_ITEMS = [
   { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/crop-lots',   icon: Wheat,            label: 'Crop Lots' },
   { to: '/transactions',icon: Receipt,           label: 'Transactions' },
-  { to: '/notifications',icon: Bell,             label: 'Alerts' },
+  { to: '/notifications',icon: Bell,             label: 'Alerts', badge: '2' },
   { to: '/profile',     icon: User,              label: 'Profile' },
 ]
 
 const SIDEBAR_ITEMS = [
   { section: 'Overview', items: [
     { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/notifications',icon: Bell,            label: 'Notifications' },
+    { to: '/notifications',icon: Bell,            label: 'Notifications', badge: '2' },
   ]},
   { section: 'My Crops', items: [
     { to: '/crop-lots',   icon: Wheat,            label: 'Crop Lots' },
   ]},
   { section: 'Intelligence', items: [
-    { to: '/crop-lots',   icon: TrendingUp,       label: 'Market Prices' },
-    { to: '/crop-lots',   icon: Brain,            label: 'AI Recommendations' },
+    { to: '/crop-lots/lot-001/market',         icon: TrendingUp, label: 'Market Prices' },
+    { to: '/crop-lots/lot-001/recommendation', icon: Brain,      label: 'AI Recommendations' },
   ]},
   { section: 'Trade', items: [
-    { to: '/crop-lots',   icon: Users,            label: 'Find Buyers' },
-    { to: '/crop-lots',   icon: Handshake,        label: 'Negotiations' },
-    { to: '/transactions',icon: Receipt,           label: 'Transactions' },
-    { to: '/crop-lots',   icon: Truck,            label: 'Logistics' },
+    { to: '/crop-lots/lot-001/buyers',         icon: Users,      label: 'Find Buyers' },
+    { to: '/negotiations/offer-001',           icon: Handshake,  label: 'Negotiations' },
+    { to: '/transactions',                     icon: Receipt,    label: 'Transactions' },
+    { to: '/logistics/txn-001',                icon: Truck,      label: 'Logistics' },
   ]},
   { section: 'Account', items: [
     { to: '/profile',     icon: User,             label: 'Profile' },
   ]},
 ]
+
+import { DemoTourBar } from '@/components/ui'
 
 export default function AppShell() {
   const { user, logout } = useAuth()
@@ -109,9 +111,24 @@ export default function AppShell() {
                   className={({ isActive }) =>
                     `sidebar-nav-item${isActive ? ' active' : ''}`
                   }
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 >
-                  <item.icon size={18} />
-                  {item.label}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span style={{
+                      background: 'var(--color-primary-600)',
+                      color: '#fff',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      padding: '0.1rem 0.45rem',
+                      borderRadius: 999,
+                    }}>
+                      {item.badge}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>
@@ -143,12 +160,35 @@ export default function AppShell() {
             className={({ isActive }) =>
               `bottom-nav-item${isActive ? ' active' : ''}`
             }
+            style={{ position: 'relative' }}
           >
             <item.icon size={22} />
             <span>{item.label}</span>
+            {item.badge && (
+              <span style={{
+                position: 'absolute',
+                top: 2,
+                right: '25%',
+                background: 'var(--color-primary-500)',
+                color: '#fff',
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                {item.badge}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
+
+      {/* ---- Floating SIH Demo Tour Controller ---- */}
+      <DemoTourBar />
     </div>
   )
 }

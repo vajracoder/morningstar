@@ -1,6 +1,5 @@
 # 🌾 MorningStar — AI-Powered Agricultural Market Intelligence & Trade Platform
 
-> **SIH 2026 Problem Statement 26132**  
 > *Smart Farming & FinTech Intelligence for Indian Agriculture*
 
 ---

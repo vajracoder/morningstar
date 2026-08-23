@@ -136,7 +136,7 @@ export default function LandingPage() {
             marginBottom: '1.5rem',
           }}>
             <Star size={13} fill="#4ade80" color="#4ade80" />
-            SIH 2026 — Problem Statement 26132
+            AI-Powered Agricultural Market Intelligence
           </div>
 
           <h1 style={{
@@ -409,7 +409,7 @@ export default function LandingPage() {
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.9rem' }}>MORNINGSTAR</span>
         </div>
         <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: 0 }}>
-          SIH 2026 — Team: Tilak, Kuldeep, Ishan · Agriculture + FinTech + AI + Trust
+          MorningStar · Team: Tilak, Kuldeep, Ishan · Agriculture + FinTech + AI + Trust
         </p>
       </footer>
     </div>

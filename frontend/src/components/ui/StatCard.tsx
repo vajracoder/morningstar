@@ -1,5 +1,5 @@
 // ============================================================
-// MORNINGSTAR — STAT CARD COMPONENT
+// MORNINGSTAR — STAT CARD COMPONENT (Production FinTech Standard)
 // ============================================================
 
 import type { ReactNode } from 'react'
@@ -31,60 +31,72 @@ export default function StatCard({
 }: StatCardProps) {
   return (
     <div
-      className="stat-card"
+      className={`stat-card ${onClick ? 'card-interactive' : ''}`}
       onClick={onClick}
-      style={{
-        cursor: onClick ? 'pointer' : 'default',
-        '--accent': accentColor,
-      } as React.CSSProperties}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
     >
-      {/* Top accent line */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-        background: `linear-gradient(90deg, ${accentColor}, transparent)`,
-        borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-      }} />
-
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
-            fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase',
-            letterSpacing: '0.06em', color: 'var(--color-text-muted)',
-            marginBottom: '0.5rem',
+            fontSize: '0.6875rem',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            color: 'var(--color-text-muted)',
+            marginBottom: '0.375rem',
           }}>
             {label}
           </p>
+
           <div className="price-display" style={{
-            fontSize: 'clamp(1.25rem, 3vw, 1.625rem)',
+            fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
             fontWeight: 800,
             color: 'var(--color-text-primary)',
-            lineHeight: 1.1,
+            lineHeight: 1.15,
+            fontVariantNumeric: 'tabular-nums',
           }}>
             {value}
           </div>
+
           {subValue && (
-            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.375rem' }}>
+            <p style={{
+              fontSize: '0.75rem',
+              color: 'var(--color-text-muted)',
+              marginTop: '0.25rem',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
               {subValue}
             </p>
           )}
+
           {trendText && (
             <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-              marginTop: '0.5rem', fontSize: '0.8rem', fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              marginTop: '0.375rem',
+              fontSize: '0.75rem',
+              fontWeight: 600,
               color: trend === 'up' ? 'var(--color-success)' : trend === 'down' ? 'var(--color-danger)' : 'var(--color-text-muted)',
             }}>
-              {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'}
+              {trend === 'up' ? '↑ ' : trend === 'down' ? '↓ ' : '• '}
               {trendText}
             </div>
           )}
         </div>
+
         {icon && (
-          <div style={{
-            width: 44, height: 44, borderRadius: 12,
-            background: iconBg,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, color: accentColor,
-          }}>
+          <div
+            className="icon-box-md"
+            style={{
+              background: iconBg,
+              color: accentColor,
+            }}
+          >
             {icon}
           </div>
         )}

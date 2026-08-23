@@ -27,7 +27,6 @@ export default function NegotiationPage() {
   const [offer, setOffer] = useState<Offer>(MOCK_OFFER)
   const [counterPrice, setCounterPrice] = useState<number>(MOCK_OFFER.price_per_quintal)
   const [counterMessage, setCounterMessage] = useState<string>('')
-  const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
 
   // Counter history simulation

@@ -34,37 +34,80 @@ Farmer → Crop Lot → Quality → Market Intelligence → Forecast → Sell/Wa
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons, Recharts
-- **State & Architecture**: Modular API services with TypeScript domain models & local storage mock persistence
-- **Evaluator Tour**: Built-in 12-step interactive SIH Judge Walkthrough controller (`DemoTourBar`)
-- **Backend & AI Integration**: FastAPI (Python), PostgreSQL / SQLite, Price Forecasting & ML models
+- **Backend & APIs**: Node.js, Express, MongoDB (Mongoose), JWT Authentication
+- **AI & Forecast Engine**: Machine learning predictive models (price forecasting & recommendation engine)
+- **Evaluator Mode**: Built-in 12-step interactive SIH Judge Walkthrough controller (`DemoTourBar`)
+
+---
+
+## 📁 Project Structure
+
+```
+MorningStar/
+├── frontend/                     # React 19 + TypeScript frontend application
+│   ├── src/
+│   │   ├── api/                 # API service layer (crops, buyers, forecast, offers, etc.)
+│   │   ├── components/          # Reusable UI design system & AppShell
+│   │   ├── context/             # AuthContext (state & session management)
+│   │   ├── mock/                # Mock data & localStorage state persistence
+│   │   ├── pages/               # 15 farmer & public experience pages
+│   │   └── types/               # TypeScript domain contracts
+│   └── package.json
+│
+├── src/                         # Backend API server (Express / MongoDB)
+│   ├── config/                  # Database connection
+│   ├── controllers/             # Route handlers
+│   ├── middleware/              # Auth & error handling
+│   ├── models/                  # Mongoose models
+│   ├── routes/                  # Express routers
+│   ├── utils/                   # Helpers (ApiError, asyncHandler)
+│   └── server.js                # App entry point
+└── README.md
+```
+
+---
+
+## 🔌 Backend Modules & API Routes
+
+| Module | Model | Route | Description |
+|---|---|---|---|
+| **Buyers** | `Buyer` | `/api/buyers` | Institutional buyer directory & profiles |
+| **Buyer Verification** | `BuyerVerification` | `/api/buyer-verifications` | KYC & GST verification records |
+| **Crop Lots** | `CropLot` | `/api/crop-lots` | Farmer crop lot inventory & quality |
+| **Offers** | `Offer` | `/api/offers` | Bid submissions & proposals |
+| **Negotiation** | `Negotiation` | `/api/negotiations` | Counter-offer discussion rounds |
+| **Contracts** | `Contract` | `/api/contracts` | Legally binding digital agreements |
+| **Transactions** | `Transaction` | `/api/transactions` | Order fulfillment lifecycle |
+| **Logistics** | `Logistics` | `/api/logistics` | Transport carrier booking & tracking |
+| **Payments** | `Payment` | `/api/payments` | Escrow & NEFT/UPI settlement |
+| **Trust** | `Trust` | `/api/trust` | User reputation & reliability rating |
+| **Disputes** | `Dispute` | `/api/disputes` | Conflict resolution management |
 
 ---
 
 ## 🏃 Getting Started
 
-### Prerequisites
-- Node.js (v18+)
-- npm or yarn
-
-### Installation & Run
+### 1. Frontend Setup
 
 ```bash
-# Navigate to frontend directory
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run local development server
 npm run dev
+```
+*Frontend runs at `http://localhost:5173`.*
 
-# Build for production
-npm run build
+### 2. Backend Setup
+
+```bash
+# In the root project directory
+npm install
+cp .env.example .env   # Configure MongoDB URI and JWT secrets
+npm run dev
 ```
 
 ---
 
 ## 👥 Team
-- **Tilak**: Product Shell, Frontend Architecture, Design System & Integration Owner
+- **Tilak**: Product Shell, Frontend Architecture, Design System & Final Integration Owner
 - **Kuldeep**: Market Intelligence & AI/ML Forecasting Engine
 - **Ishan**: Marketplace, Logistics & Transaction Backend

@@ -1,0 +1,1 @@
+"""KrishiPulse Price Forecasting Package"""
